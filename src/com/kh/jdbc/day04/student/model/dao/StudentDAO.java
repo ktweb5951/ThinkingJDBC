@@ -1,13 +1,40 @@
 package com.kh.jdbc.day04.student.model.dao;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.Reader;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 import com.kh.jdbc.day04.student.model.vo.Student;
 import com.kh.jdbc.day04.student.common.JDBCTemplate;
 
 public class StudentDAO {
+
+	/*
+	 * 1. Checked Excption과 Uncheked Excption
+	 * 2. 예외의 종류 Throwable - Exception(checked excpetion 한정)
+	 * 3. d예이처리 방법 : throws, try~catch
+	 */
+	private Properties prop;
+
+	public StudentDAO() {
+		prop = new Properties();
+		try {
+			Reader reader = new FileReader("resources/query.properties");
+			prop.load(reader);
+		} catch(Exception e) { // 최상위
+			e.printStackTrace(); 
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+		}
+	}
+	
 	/*
 	 * 1. Statement
 	 * - createStatement() 메소드를 통해서 객체 생성
@@ -26,37 +53,29 @@ public class StudentDAO {
 	 * - ex) 아이디로 정보조회, 이름으로 정보조회
 	 * 
 	 */
-	public List<Student> selectAll(Connection conn) {
+	public List<Student> selectAll(Connection conn) throws SQLException{
 		Statement stmt = null;
 		ResultSet rset = null;
-		String query = "SELECT * FROM STUDENT_TBL";
 		Student student = null;
 		List<Student> sList = null;
-		try {
-			stmt = conn.createStatement();
-			rset = stmt.executeQuery(query);
-			sList = new ArrayList<Student>();
-			while(rset.next()) { //커서를 움직임, 반복문으로 실행해야함
-				student = rsetToStudent(rset);
-				sList.add(student);
-			}
-			
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				rset.close();
-				stmt.close();
-				conn.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+		String query = prop.getProperty("selectAll");
+	
+		stmt = conn.createStatement();
+		rset = stmt.executeQuery(query);
+		sList = new ArrayList<Student>();
+		while(rset.next()) { //커서를 움직임, 반복문으로 실행해야함
+			student = rsetToStudent(rset);
+			sList.add(student);
 		}
+			rset.close();
+			stmt.close();
+		
 		return sList;
+		
 	}
 
 	public Student selectOneById(Connection conn, String studentId) {
-		String query = "SELECT * FROM STUDENT_TBL WHERE STUDENT_ID = ?";
+		String query = prop.getProperty("selectOneById");
 		PreparedStatement pstmt = null;
 		ResultSet rset = null;
 		Student student = null;
@@ -75,7 +94,6 @@ public class StudentDAO {
 			try {
 				rset.close();
 				pstmt.close();
-				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -86,7 +104,7 @@ public class StudentDAO {
 	public List<Student> selectAllByName(Connection conn, String studentName) {
 		PreparedStatement pstmt = null;
 		ResultSet rset = null;
-		String query = "SELECT * FROM STUDENT_TBL WHERE STUDENT_NAME = ?";
+		String query = prop.getProperty("selectAllByName");
 		Student student = null;
 		List<Student> sList = null;
 		try {
@@ -105,7 +123,6 @@ public class StudentDAO {
 			try {
 				rset.close();
 				pstmt.close();
-				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -114,7 +131,7 @@ public class StudentDAO {
 	}
 
 	public int insertStudent(Connection conn, Student student) {
-			String query = "INSERT INTO STUDENT_TBL VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, SYSDATE)";
+			String query = prop.getProperty("insertStudent");
 			PreparedStatement pstmt = null;
 			int result =-1;
 			try {
@@ -136,7 +153,6 @@ public class StudentDAO {
 			} finally {
 				try {
 					pstmt.close();
-					conn.close();
 				} catch (SQLException e) {
 					e.printStackTrace();
 				}
@@ -145,7 +161,7 @@ public class StudentDAO {
 		}
 
 	public int updateStudent(Connection conn, Student student) {
-		String query = "UPDATE STUDENT_TBL SET STUDENT_PWD = ?, EMAIL =?, PHONE = ?, ADDRESS = ?, HOBBY = ? WHERE STUDENT_ID=? ";
+		String query = prop.getProperty("updateStudent");
 		PreparedStatement pstmt = null;
 		int result =-1;
 		try {
@@ -163,7 +179,6 @@ public class StudentDAO {
 		} finally {
 			try {
 				pstmt.close();
-				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
@@ -173,7 +188,7 @@ public class StudentDAO {
 	}
 
 	public int deleteStudent(Connection conn, String studentId) {
-		String query = "DELETE FROM STUDENT_TBL WHERE STUDENT_ID = ?";
+		String query = prop.getProperty("deleteStudent");
 		PreparedStatement pstmt = null;
 		Student student = null;
 		int result =-1;
@@ -187,7 +202,6 @@ public class StudentDAO {
 		} finally {
 			try {
 				pstmt.close();
-				conn.close();
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}

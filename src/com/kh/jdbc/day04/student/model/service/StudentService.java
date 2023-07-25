@@ -19,7 +19,14 @@ public class StudentService {
 
 	public List<Student> selectAll() {
 		Connection conn = jdbcTemplate.createConnection();
-		List<Student> sList = sDao.selectAll(conn);
+		List<Student> sList = null;
+		
+		try {
+			sList = sDao.selectAll(conn);
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		jdbcTemplate.close();
 		return sList;
 	}
@@ -48,6 +55,13 @@ public class StudentService {
 	public int insertStudent(Student student) {
 		Connection conn = jdbcTemplate.createConnection();
 		int result = sDao.insertStudent(conn, student);
+		result += sDao.updateStudent(conn, student);
+		
+		if(result>1) {
+			JDBCTemplate.commit(conn);
+		}else {
+			JDBCTemplate.rollback(conn);;
+		}
 		jdbcTemplate.close();
 		return result;
 	}
